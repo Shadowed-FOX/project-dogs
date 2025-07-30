@@ -1,0 +1,47 @@
+{% extends 'app/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<h1 class="text">Zagubiony pupil</h1>
+<p>{{ message }}</p>
+
+<!-- Map container with explicit height -->
+<div id="leaflet-map"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize map with default view from context
+        const map = L.map('leaflet-map').setView(
+            [{{ default_view.lat }}, {{ default_view.lng }}],
+        {{ default_view.zoom }}
+    );
+
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Add markers from context
+    {% for marker in markers %}
+    L.marker([{{ marker.lat }}, {{ marker.lng }}])
+        .addTo(map)
+        .bindPopup(`
+                <h3>{{ marker.name }}</h3>
+                <p>{{ marker.description }}</p>
+                <small>ID: {{ marker.id }}</small>
+            `);
+    {% endfor %}
+
+    // Auto-fit bounds if markers exist
+    {% if markers %}
+    const group = new L.featureGroup([
+        {% for marker in markers %}
+    L.marker([{{ marker.lat }}, {{ marker.lng }}]){% if not forloop.last %}, {% endif %}
+    {% endfor %}
+        ]);
+    map.fitBounds(group.getBounds().pad(0.2));
+    {% endif %}
+    });
+</script>
+{% endblock %}

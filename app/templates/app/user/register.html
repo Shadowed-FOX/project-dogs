@@ -1,0 +1,53 @@
+{% extends '../base.html' %}
+
+{% block content %}
+
+<!-- <form method="post" class="form-class">
+    <h2>Rejestracja</h2>
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    {% if form.non_field_errors %}
+        <div class="form-errors">
+            {% for error in form.non_field_errors %}
+                <p class="error-text">- {{ error }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <button type="submit">Register</button>
+    <p style="margin-top: 1.5rem; text-align: center;">Masz juz konto? <a href="{% url 'login' %}">Zaloguj się tutaj</a></p>
+</form> -->
+
+<form method="post" class="form-class">
+    <h2>Rejestracja</h2>
+    {% csrf_token %}
+
+    {% for field in form %}
+        <div class="form-group">
+            <div class="label-error-wrapper">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {% if field.errors %}
+                    <div class="field-errors">
+                        {% for error in field.errors %}
+                            <p class="error-text">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            {{ field }}
+        </div>        
+    {% endfor %}
+    {% if form.non_field_errors %}
+        <div class="form-errors" style="margin-bottom: 1rem;">
+            {% for error in form.non_field_errors %}
+                <p class="error-text">- {{ error }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <button type="submit">Register</button>
+    <p style="margin-top: 1.5rem; text-align: center;">Masz już konto? <a href="{% url 'login' %}">Zaloguj się tutaj</a></p>
+</form>
+
+
+{% endblock %}

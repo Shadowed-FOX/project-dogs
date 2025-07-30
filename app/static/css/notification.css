@@ -1,0 +1,20 @@
+.notification-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1em;
+    padding: 1em;
+    box-sizing: border-box;
+}
+
+.notification {
+    border: 1px solid #bcbcbc;
+    border-radius: 28px;
+    text-align: center;
+}
+
+.notification img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}

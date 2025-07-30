@@ -1,0 +1,36 @@
+{% extends '../base.html' %}
+
+{% block content %}
+
+<form method="post" class="form-class">
+    <h2>Zmiana danych konta</h2>
+    {% csrf_token %}
+
+    {% for field in form %}
+        <div class="form-group">
+            <div class="label-error-wrapper">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {% if field.errors %}
+                    <div class="field-errors">
+                        {% for error in field.errors %}
+                            <p class="error-text">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            {{ field }}
+        </div>        
+    {% endfor %}
+    {% if form.non_field_errors %}
+        <div class="form-errors" style="margin-bottom: 1rem;">
+            {% for error in form.non_field_errors %}
+                <p class="error-text">- {{ error }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <a style="margin-top: 0.5em;" href="{% url 'change_password' %}">Kliknij tu aby zmienić hasło</a>
+    <button type="submit">Aktualizuj</button>
+</form>
+
+
+{% endblock %}

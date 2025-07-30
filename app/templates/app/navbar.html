@@ -1,0 +1,13 @@
+{% block navbar %}
+<div class="navbar">
+    <div>
+        <a href="{% url 'list_notify' %}">Strona główna</a>
+        <a href="{% url 'add_notify' %}">Dodaj ogłoszenie</a>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'login' %}">Logowanie</a>
+        {% else %}
+            <a href="{% url 'account' %}">Konto</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

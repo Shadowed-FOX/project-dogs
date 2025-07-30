@@ -1,0 +1,66 @@
+{% extends "admin/change_form.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <!-- Leaflet CSS and JS from CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map { height: 400px; width: 100%; margin-bottom: 20px; }
+        .field-latitude, .field-longitude { margin-bottom: 10px; }
+    </style>
+{% endblock %}
+
+{% block after_field_sets %}
+    <fieldset class="module aligned">
+        <h2>{% trans "Select Location on Map" %}</h2>
+        <div class="form-row">
+            <div id="map"></div>
+        </div>
+    </fieldset>
+{% endblock %}
+
+{% block admin_change_form_document_ready %}
+    {{ block.super }}
+    <script>
+        (function($) {
+            $(document).ready(function() {
+                // Initialize Leaflet map
+                var map = L.map('map').setView([50.5, 18.0], 8);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+                // Add marker
+                var marker = null;
+                var latInput = $('#id_latitude');
+                var lonInput = $('#id_longitude');
+
+                // Function to update marker and inputs
+                function updateMarker(lat, lng) {
+                    if (marker) {
+                        marker.setLatLng([lat, lng]);
+                    } else {
+                        marker = L.marker([lat, lng]).addTo(map);
+                    }
+                    latInput.val(lat.toFixed(6));
+                    lonInput.val(lng.toFixed(6));
+                }
+
+                // On map click, update marker and inputs
+                map.on('click', function(e) {
+                    updateMarker(e.latlng.lat, e.latlng.lng);
+                });
+
+                // Initialize marker if latitude/longitude already set
+                var initialLat = parseFloat(latInput.val());
+                var initialLon = parseFloat(lonInput.val());
+                if (initialLat && initialLon) {
+                    updateMarker(initialLat, initialLon);
+                    map.setView([initialLat, initialLon], 12);
+                }
+            });
+        })(django.jQuery);
+    </script>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends '../notify/detail_notify.html' %}
+
+{% block content %}
+  <h2>Czat zywo dla {{ statement.name }} (ID: {{ statement.id }})</h2>
+  
+  <div id="chat-messages" style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+    {% for message in messages %}
+      <div>
+        <strong>{{ message.user.first_name }} {{ message.user.last_name }}</strong>
+        ({{ message.created_at|date:"Y-m-d H:i" }}): {{ message.content }}
+      </div>
+    {% endfor %}
+  </div>
+
+  <div style="margin-top: 20px;">
+    <input type="text" id="message-input" placeholder="Napisz wiadomość" style="width: 80%;">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    const channelId = {{ channel.id }};
+    const wsUrl = 'ws://' + window.location.host + '/ws/channel/' + channelId + '/';
+    console.log('Attempting to connect to WebSocket:', wsUrl);
+    const socket = new WebSocket(wsUrl);
+
+    socket.onopen = function(e) {
+      console.log('WebSocket connected successfully');
+    };
+
+    socket.onmessage = function(e) {
+      console.log('Received message:', e.data);
+      const data = JSON.parse(e.data);
+      const messagesDiv = document.getElementById('chat-messages');
+      const messageDiv = document.createElement('div');
+      messageDiv.innerHTML = `<strong>${data.first_name} ${data.last_name}</strong> (${data.created_at}): ${data.message}`;
+      messagesDiv.appendChild(messageDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    };
+
+    socket.onclose = function(e) {
+      console.error('WebSocket closed:', e);
+    };
+
+    socket.onerror = function(e) {
+      console.error('WebSocket error:', e);
+    };
+
+    function sendMessage() {
+      const messageInput = document.getElementById('message-input');
+      const message = messageInput.value;
+      if (message.trim() && socket.readyState === WebSocket.OPEN) {
+        console.log('Sending message:', message);
+        socket.send(JSON.stringify({
+          'message': message
+        }));
+        messageInput.value = '';
+      } else {
+        console.error('Cannot send message: WebSocket not open or empty message');
+      }
+    }
+
+    document.getElementById('message-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+  </script>
+{% endblock %}

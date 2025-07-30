@@ -1,0 +1,62 @@
+{% extends '../base.html' %}
+
+{% block content %}
+
+{% if messages %}
+    <div id="popup-messages" style="position: fixed; top: 1rem; right: 1rem; z-index: 9999;">
+        {% for message in messages %}
+            <div class="message-popup {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div style="display: flex; justify-content: space-between;"><p style="font-size: 2em; margin-bottom: auto; margin-top: auto;">Witaj <b style="text-transform: capitalize;">{{ user.first_name }}</b></p><div style="display: flex; gap: 1em;"><a href="{% url 'logout' %}" style="font-size: 1em; margin-bottom: auto; margin-top: auto;">Wyloguj się</a><a href="{% url 'update_user_info' %}" style="font-size: 1em; margin-bottom: auto; margin-top: auto;">Edytuj konto</a></div></div>
+
+<div>
+    <p style="font-size: 1.5em;">Twoje powiadomienia:</p>
+    <div class="notification-grid">
+        {% for notify in notifications %}
+            <div style="border: 1px solid #bcbcbc; border-radius: 28px; text-align: center;">
+                <div style="width: 100%; aspect-ratio: 1/1; overflow: hidden; border-radius: 23px; margin-top: 0;">
+                {% if notify.image %}
+                    <img style="width: 100%; height: 100%; object-fit: cover;" src="{{ notify.image.url }}" alt="{{ notify.name }}">
+                {% else %}
+                    <img src="https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png" alt="Placeholder">
+                {% endif %}
+                </div>
+
+                <p style="font-weight: 300;">Imie: <span style="font-weight: 400;">{{ notify.name }}</span></p>
+                <p style="font-weight: 300;">Rasa: <span style="font-weight: 400;">{{ notify.race }}</span></p>
+                <p style="font-weight: 300;">Wielkosc: <span style="font-weight: 400;">{{ notify.get_size_display }}</span></p>
+                <p style="font-weight: 300;">Promien: <span style="font-weight: 400;">{{ notify.radius }} km</span></p>
+                <div style="display: flex; justify-content: space-between;">
+                    <a href="{% url 'edit_notify' notify.id %}" style="margin: 5% auto; text-decoration: underline; color:cornflowerblue; cursor: pointer;">Edytuj</a>
+                    <a href="{% url 'delete_notify' notify.id %}" style="margin: 5% auto; text-decoration: underline; color:tomato; cursor: pointer;">Usun</a>
+                </div>
+            </div>
+        {% empty %}
+            <p>Nie stworzyles jeszcze zadnego powiadomienia</p>
+        {% endfor %}
+    </div>
+</div>
+
+
+<script>
+    document.querySelectorAll(".message-popup").forEach(el => {
+        // Click to dismiss with animation
+        el.addEventListener("click", () => {
+            el.classList.add("fade-out");
+            setTimeout(() => el.remove(), 500);
+        });
+
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            el.classList.add("fade-out");
+            setTimeout(() => el.remove(), 500);
+        }, 5000);
+    });
+</script>
+
+{% endblock %}

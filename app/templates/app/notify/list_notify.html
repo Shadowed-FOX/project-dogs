@@ -1,0 +1,126 @@
+{% extends '../base.html' %}
+{% block content %}
+<div>
+    <h1 style="text-align: center;">Zagubione pupile</h1>
+
+    <form method="get" style="display: flex; flex-direction: column; align-items: center; border: 2px solid #ccc; border-radius: 28px; padding: 1rem 0.5rem; margin-bottom: 1rem;">
+        <div id="inputs" style="width: 80%; display: flex; flex-direction: row; justify-content: space-around;">
+            <div style="display: flex; flex-direction: column; align-items: end;">
+                <div>
+                    {{ form.name.label_tag }} {{ form.name }}
+                </div>
+
+                <div>
+                    {{ form.race.label_tag }} {{ form.race }}
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: end;">
+                <div>
+                    {{ form.voivodeship.label_tag }} {{ form.voivodeship }}
+                </div>
+
+                <div>
+                    {{ form.city.label_tag }} {{ form.city }}
+                </div>
+            </div>
+            <div>
+                {{ form.size.label_tag }} {{ form.size }}
+            </div>
+        </div>
+        <button type="submit" style="width: 40%; margin-top: 0.5rem; height: 2.5rem;">Filtruj</button>
+    </form>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
+        {% for dog in dogs_data_json %}
+            <div class="dog-card" onclick='location.href="{{ dog.url }}";' style="display: flex; align-items: center; flex-direction: column; border: 2px solid #ccc; border-radius: 28px;">
+                <div style="width: 100%; aspect-ratio: 1/1; overflow: hidden; border-radius: 23px; margin-top: 0;">
+                    <img style="width: 100%; height: 100%; object-fit: cover;" src="{{ dog.image }}" />
+                </div>
+                {% if dog.name %}
+                    <p style="margin: 0.5rem 0;">{{ dog.name|title|default:"Brak" }}</p>
+                {% endif %}
+                <p style="margin: 0.5rem 0;">{{ dog.race|title }}</p>
+                <p style="margin: 0.5rem 0;">{{ dog.display_size }}</p>
+                <p style="margin: 0.5rem 0;">{{ dog.state_type }}</p>
+                <p style="margin: 0.5rem 0;">{{ dog.city|title }}, {{ dog.voivodeship|title }}</p>
+                <a href="{{ dog.url }}" style="margin: 0.5rem 0;">Zobacz</a>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div style="margin-top: 3rem;" id="leaflet-map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('leaflet-map').setView([50.0412, 21.9991], 13);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 18,
+        }).addTo(map);
+
+        // Dog data from Django (passed as a JSON-like structure)
+        var dogs = {{ dogs_data_json|safe }};
+
+        console.log(dogs);
+
+        // Add markers and circles for each dog
+        dogs.forEach(function(dog) {
+            // Create marker
+            var marker = L.marker([dog.latitude, dog.longitude]).addTo(map);
+            marker.bindPopup(
+                `
+                <div>
+                    Rasa: ${dog.race}<br>
+                    Rozmiar: ${dog.size}<br>
+                    <a href="${dog.url}">Zobacz szczegoly</a>
+                    <img src="${dog.image}" alt="${dog.name}" style="max-width: 100px;"/>
+                </div>
+                `
+            );
+
+            // Add circle (radius in meters, so multiply km by 1000)
+            L.circle([dog.latitude, dog.longitude], {
+                color: 'blue',
+                fillColor: '#30f',
+                fillOpacity: 0.2,
+                radius: dog.radius * 1000  // Convert km to meters
+            }).addTo(map);
+        });
+
+        // Adjust map bounds to fit all markers
+        if (dogs.length > 0) {
+            var bounds = dogs.map(dog => [dog.latitude, dog.longitude]);
+            map.fitBounds(bounds);
+        }
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const voivodeshipSelect = document.querySelector('[name="voivodeship"]');
+            const citySelect = document.querySelector('[name="city"]');
+
+            voivodeshipSelect.addEventListener("change", function () {
+                fetch(`/get-cities/?voivodeship=${this.value}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Clear current options
+                        citySelect.innerHTML = `<option value="">-- Wybierz miasto --</option>`;
+                        
+                        // Populate new options
+                        data.forEach(city => {
+                            const option = document.createElement("option");
+                            option.value = city.city;
+                            option.textContent = city.city;
+                            citySelect.appendChild(option);
+                    });
+                });
+            });
+        });
+    </script>
+</div>
+{% endblock %}

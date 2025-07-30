@@ -1,0 +1,150 @@
+{% extends '../base.html' %}
+{% block content %}
+
+<h1 style="text-align: center; border: 1px solid #ccc; padding: 0.5rem; border-radius: 28px;">Zgubiony pupil {{ dog.name|title }}</h1>
+
+<div id="map-comment-container">
+    <div id="info-box-notify" style="border-radius: 28px;">
+        <!-- Info Section -->
+        <div>
+            <div style="border: 1px solid #ccc; border-radius: 28px; padding: 0.5rem 1rem; margin-bottom: 1rem;">
+                <h2 style="text-align: center;">Informacje</h2>
+                {% if dog.name %}
+                    <p style="font-size: 20px;">Imię: <strong>{{ dog.name|title }}</strong></p>
+                {% endif %}
+                <p style="font-size: 20px;">Rasa: <strong>{{ dog.race|title }}</strong></p>
+                <p style="font-size: 20px;">Wielkość: <strong>{{ dog.get_size_display|title }}</strong></p>
+                <p style="font-size: 20px;">Miasto: <strong>{{ dog.city|title }}</strong></p>
+            </div>
+
+            <div style="border: 1px solid #ccc; border-radius: 28px; padding: 0.5rem 1rem; margin-bottom: 1rem;">
+                <h2 style="text-align: center;">Kontakt</h2>
+                <p style="font-size: 20px;">Właściciel: <strong>{{ dog.user_id.first_name|title }} {{dog.user_id.last_name|title }}</strong></p>
+                <p style="font-size: 20px; overflow-wrap: break-word;">Email: <strong>{{ dog.user_id }}</strong></p>
+                <p style="font-size: 20px;">Telefon: <strong>{{ dog.user_id.contact }}</strong></p>
+            </div>
+
+            <div style="border: 1px solid #ccc; border-radius: 28px; padding: 0.5rem 1rem;">
+                <h2 style="text-align: center;">Opis</h2>
+                <p style="font-size: 20px;">{{ dog.about }}</p>
+            </div>
+        </div>
+        <div style="width: 100%; aspect-ratio: 2/1; overflow: hidden; border-radius: 23px; margin-top: 0; height: 100%">
+            <img style="width: 100%; height: 100%; object-fit: cover;" src="{{ dog.image }}" alt="Dog image"/>
+        </div>
+        <div id="leaflet-map-notify"></div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('leaflet-map-notify').setView([{{ dog.latitude }}, {{ dog.longitude }}], 15);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 18,
+        }).addTo(map);
+
+        // Dog data from Django (passed as a JSON-like structure)
+        var marker = L.marker([{{ dog.latitude }}, {{ dog.longitude }}]).addTo(map);
+
+        // Add circle (radius in meters, so multiply km by 1000)
+        L.circle([{{ dog.latitude }},{{ dog.longitude }}], {
+            color: 'blue',
+            fillColor: '#30f',
+            fillOpacity: 0.2,
+            radius: {{ dog.radius }} * 1000  // Convert km to meters
+        }).addTo(map);
+    </script>
+
+    <div id="message-channel" style="display: flex; flex-direction: column; height: 70vh; border-radius: 28px;">
+        <div style="position: relative; border: 1px solid #ccc; border-radius: 28px; display: flex; align-items: center; justify-content: center; padding: 10px;">
+            <h2 style="text-align: center; margin: 0;">Czat for {{ dog.name }}</h2>
+        </div>
+
+        <!-- Scrollable messages area -->
+        <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column;">
+            {% for message in messages %}
+            <div style="overflow-wrap: break-word; margin-bottom: 8px;">
+                <strong>{{ message.user.first_name }} {{ message.user.last_name }}</strong>
+                ({{ message.created_at|date:"Y-m-d H:i" }}): {{ message.content }}
+            </div>
+            {% endfor %}
+        </div>
+
+
+        <!-- Send message area (NOT scrolling) -->
+        <div style="border: 1px solid #ccc; padding: 10px; border-radius: 28px;">
+            {% if can_send_messages %}
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="message-input" placeholder="Napisz wiadomość" style="flex: 1; padding: 8px; min-width: 0; border-radius: 28px;" />
+                    <button onclick="sendMessage()" style="padding: 8px 16px; white-space: nowrap; border-radius: 28px;">Wyslij</button>
+                </div>
+            {% else %}
+                <p style="margin: 0;">Prosze, <a href="{% url 'login' %}?next={{ request.path }}">Zaloguj sie</a>aby wyslac wiadomosc.</p>
+            {% endif %}
+        </div>
+
+
+        <script>
+            const channelId = {{ channel.id }};
+            const wsUrl = 'ws://' + window.location.host + '/ws/channel/' + channelId + '/';
+            console.log('Attempting to connect to WebSocket:', wsUrl);
+            const socket = new WebSocket(wsUrl);
+
+            socket.onopen = function(e) {
+                console.log('WebSocket connected successfully');
+            };
+
+            socket.onmessage = function(e) {
+                console.log('Received message:', e.data);
+                const data = JSON.parse(e.data);
+                const messagesDiv = document.getElementById('chat-messages');
+                const messageDiv = document.createElement('div');
+                messageDiv.innerHTML = `<strong>${data.first_name} ${data.last_name}</strong> (${data.created_at}): ${data.message}`;
+                messagesDiv.appendChild(messageDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight; // auto-scroll to bottom
+            };
+
+            socket.onclose = function(e) {
+                console.error('WebSocket closed:', e);
+            };
+
+            socket.onerror = function(e) {
+                console.error('WebSocket error:', e);
+            };
+
+            function sendMessage() {
+                const messageInput = document.getElementById('message-input');
+                if (!messageInput) return; // extra protection
+
+                console.log(messageInput);
+                
+
+                const message = messageInput.value;
+                if (message.trim() && socket.readyState === WebSocket.OPEN) {
+                    console.log('Sending message:', message);
+                    socket.send(JSON.stringify({
+                        'message': message
+                    }));
+                    messageInput.value = '';
+                } else {
+                    console.error('Cannot send message: WebSocket not open or empty message');
+                }
+            }
+
+            const messageInput = document.getElementById('message-input');
+            if (messageInput) {
+                messageInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+            }
+        </script>
+    </div>
+</div>
+
+{% endblock %}

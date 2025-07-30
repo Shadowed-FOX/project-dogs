@@ -1,0 +1,5 @@
+.env
+postgres_data
+.venv/
+__pycache__
+media

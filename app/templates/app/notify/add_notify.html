@@ -1,0 +1,78 @@
+{% extends '../base.html' %}
+{% block content %}
+<div>
+    <form style="width: 90%;" method="post" enctype="multipart/form-data" class="form-class">
+        <h2>Dodaj zgubionego pupila</h2>
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <!-- {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %} -->
+
+        <!-- Display field-specific errors for latitude and longitude -->
+        {% if form.latitude.errors or form.longitude.errors %}
+            <div style="color: #e15656;">
+                <p>Prosze zaznacz gdzie ostatnio widziano twojego pupila!</p>
+            </div>
+        {% endif %}
+
+        <!-- Map container -->
+        <div id="leaflet-map"></div>
+
+        <button style="margin-top: 1rem; margin-bottom: 1rem;" type="submit">Dodaj ogłoszenie</button>
+    </form>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('leaflet-map').setView([50.0412, 21.9991], 13);
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        // Add a marker that can be moved
+        var marker = L.marker([50.0412, 21.9991], { draggable: true }).addTo(map);
+
+        // Update hidden form fields when marker is moved
+        marker.on('dragend', function(e) {
+            var coords = e.target.getLatLng();
+            document.getElementById('id_latitude').value = coords.lat;
+            document.getElementById('id_longitude').value = coords.lng;
+            console.log(document.getElementById('id_latitude').value)
+            console.log(document.getElementById('id_longitude').value)
+        });
+
+        // Optional: Update marker position on map click
+        map.on('click', function(e) {
+            marker.setLatLng(e.latlng);
+            document.getElementById('id_latitude').value = e.latlng.lat;
+            document.getElementById('id_longitude').value = e.latlng.lng;
+            console.log(document.getElementById('id_latitude').value)
+            console.log(document.getElementById('id_longitude').value)
+        });
+
+        // Center map on user's location if geolocation is available
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var userLatLng = [position.coords.latitude, position.coords.longitude];
+                map.setView(userLatLng, 13);
+                marker.setLatLng(userLatLng);
+                document.getElementById('id_latitude').value = userLatLng[0];
+                document.getElementById('id_longitude').value = userLatLng[1];
+            });
+        } else {
+            console.log("Geolocation not supported")
+            document.getElementById('id_latitude').value = ''
+            document.getElementById('id_longitude').value = ''
+        }   
+    </script>
+</div>
+{% endblock %}

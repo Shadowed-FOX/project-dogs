@@ -1,0 +1,96 @@
+
+.form-class {
+    width: 50%;
+    margin: 40px auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    padding-bottom: 0.5rem;
+    padding-top: 0.5rem;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.form-class input[type="text"],
+.form-class input[type="email"],
+.form-class input[type="password"],
+.form-class input[type="number"],
+.form-class select,
+.form-class textarea {
+    width: 100%;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.form-class input:focus,
+.form-class select:focus,
+.form-class textarea:focus {
+    border-color: #4f46e5;
+    outline: none;
+}
+
+.form-class label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-class button[type="submit"] {
+    background-color: #4f46e5;
+    width: 100%;
+    color: #fff;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-class button[type="submit"]:hover {
+    background-color: #4338ca;
+}
+
+.errorlist {
+    display: none;
+}
+
+.form-errors {
+    margin-left: auto;
+    margin-right: auto;
+    color: tomato;
+    text-align: left;
+}
+
+.form-success {
+    margin-left: auto;
+    margin-right: auto;
+    color:yellowgreen;
+    text-align: center;
+}
+
+.label-error-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 4px;
+}
+
+.field-errors {
+    color: tomato;
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+.error-text {
+    margin: 0;
+}
